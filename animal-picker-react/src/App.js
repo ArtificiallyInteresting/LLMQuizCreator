@@ -113,9 +113,9 @@ function App() {
   }
 
 
-  const getResult = () => {
+  const getResult = async () => {
     // return {"finalResult":"bear", "explanation":"because we're testing"}
-    return await fetch("http://127.0.0.1:5000/generateResults", {
+    return await fetch("http://127.0.0.1:5000/analyzeAnswers", {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -139,7 +139,6 @@ function App() {
       .catch((err) => {
         console.log(err)
       });
-    }
   }
   const generateQuestions = async () => {
     return [

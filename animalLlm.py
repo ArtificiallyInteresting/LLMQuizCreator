@@ -41,13 +41,13 @@ def generateQuestions(thing, items):
     questions = output.split("\n")
     return questions
 
-def analyzeAnswers(thing, names, descriptions, questions, answers):
+def analyzeAnswers(thing, items, questions):
     history = ChatMessageHistory()
     template = "You are a funny and interesting chatbot analyzing the answers to a quiz to determine which {thing} the user is. The user will end up being one of these things: \n "
-    for i in range(len(names)):
-        template += names[i] + ": " + descriptions[i] + " \n "
+    for i in range(len(items)):
+        template += items[i]["name"] + ": " + items[i]["description"] + " \n "
     # systemMessage = SystemMessagePromptTemplate.from_template(template=template, thing=thing, names=names, descriptions=descriptions)
-    template += "The user has already answered 5 questions to determine which {thing} they are, and their answers are as follows: \n "
+    template += "Do not ask any additional questions, just tell the user which {thing} they are, and give a funny and clever explanation as to why \n "
     # systemContent = template.format(thing=thing)
     # systemMessage = SystemMessage(content=systemContent)
     print(template)
@@ -55,9 +55,9 @@ def analyzeAnswers(thing, names, descriptions, questions, answers):
     # history.add_message(systemMessage)
     
     for i in range(len(questions)):
-        history.add_message(AIMessage(content="Question " + str(i) + ": " + questions[i]))
-        history.add_message(HumanMessage(content=answers[i]))
-    history.add_message(AIMessage(content="Alright! The results are in! And the {thing} you are is...".format(thing=thing)))
+        history.add_message(AIMessage(content="Question " + str(i) + ": " + questions[i]["question"]))
+        history.add_message(HumanMessage(content=questions[i]["answer"]))
+    # history.add_message(AIMessage(content="Alright! The results are in! And the {thing} you are is...".format(thing=thing)))
     memory = ConversationBufferMemory(return_messages=True)
     memory.load_memory_variables(inputs=history)
 
@@ -68,6 +68,7 @@ def analyzeAnswers(thing, names, descriptions, questions, answers):
     )
     chain = LLMChain(llm=llm, memory=memory, prompt=prompt)
     output = chain.run(thing=thing)
+    print(output)
     return output
 
 
