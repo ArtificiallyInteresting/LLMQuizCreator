@@ -23,42 +23,81 @@ load_dotenv()
 thing = None
 df = None
 
-def displayForm():
-    st.title("Name and Description")
+names_submitted = False
+if ("thing" in st.session_state):
+    thing = st.session_state["thing"]
+else:
+    thing = ""
+    st.session_state["thing"] = ""
 
+if ("names" in st.session_state):
+    names = st.session_state["names"]    
+    names_submitted = True
+else:
+    names = ["bear", "cow", "tiger", "penguin"]
+    # st.session_state["names"] = ["bear", "cow", "tiger", "penguin"]
+
+
+if ("descriptions" in st.session_state):
+    descriptions = st.session_state["descriptions"]
+else:
+    descriptions = ['A large furry animal. Strong and powerful.', 'A large animal. Gives milk.', 'A deadly animal. Has stripes.', 'A silly animal. Waddles. Lives in the cold.']
+    #st.session_state["descriptions"] = ['A large furry animal. Strong and powerful.', 'A large animal. Gives milk.', 'A deadly animal. Has stripes.', 'A silly animal. Waddles. Lives in the cold.']
+
+st.title("LLM Quiz Generator")
+
+if thing == "":
+    thing = st.text_input("Let's make a quiz to determine which ____ you are", value="animal")
+    thing_submitted = st.button(
+        "Submit"
+    )
+else:
+    thing_submitted = True
+
+
+
+def displayNamesForm():
+    st.session_state["thing"] = thing
     # A streamlit form which takes in four text inputs for names and then another four text inputs for a description of each name.
     with st.form(key='name_form') as form:
-        thing = st.text_input(label='Thing', value='Animal')
-        name1 = st.text_input(label='Name 1', value='Bear')
-        name2 = st.text_input(label='Name 2', value='Cow')
-        name3 = st.text_input(label='Name 3', value='Tiger')
-        name4 = st.text_input(label='Name 4', value='Penguin')
-        description1 = st.text_input(label='Description 1', value='A large furry animal. Strong and powerful.')
-        description2 = st.text_input(label='Description 2', value='A large animal. Gives milk.')
-        description3 = st.text_input(label='Description 3', value='A deadly animal. Has stripes.')
-        description4 = st.text_input(label='Description 4', value='A silly animal. Waddles. Lives in the cold.')
+        # thing = st.text_input(label='Thing', value='Animal')
+        nameInputs = []
+        descriptionInputs = []
+        for i, name in enumerate(names):
+            nameInputs.append(st.text_input(label=thing + " " + str(i+1), value=name))
+            descriptionInputs.append(st.text_input(label='description ' + str(i+1), value=descriptions[i]))
+        # for i, description in enumerate(st.session_state["descriptions"]):
+        #     descriptionInputs.append(st.text_input(label='description ' + str(i+1), value=description))
         submit_button = st.form_submit_button(label='Submit')
 
     if submit_button:
+        names_submitted = True
+        st.session_state["names"] = nameInputs
+        st.session_state["descriptions"] = descriptionInputs
         # Create a dataframe with the names and descriptions
-        df = pd.DataFrame({'Name': [name1, name2, name3, name4], 'Description': [description1, description2, description3, description4]})
-        st.dataframe(df)
+        # df = pd.DataFrame({'Name': nameInputs, 'Description': descriptionInputs})
+        # st.dataframe(df)
         # displayQuestionForm(thing, name1, name2, name3, name4, description1, description2, description3, description4)
-        displayQuestionForm()
+        # displayQuestionForm()
 
 #Yes I know this is too many parameters and it's stupid
 def displayQuestionForm():
     
     with st.form(key='question_form'):
 
+        template='''You are a question generating bot. Users are going to be given a quiz to determine which {thing} they are. Come up with exactly 5 questions that we could ask the user to determine which {thing} they are. These are the choices:\n'''
+        input_variables=["thing"]
+        chain_variables = {"thing":thing}
+        for i in range(len(st.session_state["names"])):
+            template += "\n {name" + str(i) + "}: {" + "description" + str(i) + "}"
+            # input_variables.append("name" + str(i))
+            # input_variables.append("description" + str(i))
+            chain_variables["name" + str(i)] = st.session_state["names"][i]
+            chain_variables["description" + str(i)] = st.session_state["descriptions"][i]
         llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
         prompt=PromptTemplate(
-            template='''You are a question generating bot. Users are going to be given a quiz to determine which {thing} they are. Come up with exactly 5 questions that we could ask the user to determine which {thing} they are. These are the choices:
-            {name1}: {description1}
-            {name2}: {description2}
-            {name3}: {description3}
-            {name4}: {description4}''',
-            input_variables=["thing", "name1", "description1", "name2", "description2", "name3", "description3", "name4", "description4"],
+            template=template,
+            input_variables=chain_variables.keys(),
         )
         
         chain = LLMChain(llm=llm, prompt=prompt)
@@ -102,6 +141,9 @@ def displayQuestionForm():
             st.write(output)
 
 
-displayForm()
-# displayQuestionForm()
+if thing_submitted and not names_submitted:
+    displayNamesForm()
+if "names" in st.session_state: #names_submitted:
+    displayQuestionForm()
+    
 

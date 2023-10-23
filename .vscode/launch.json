@@ -5,6 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "debug streamlit",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "args": [
+                "-m",
+                "streamlit.cli",
+                "run"
+            ],
+            "console": "externalTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Flask",
             "type": "python",
             "request": "launch",
