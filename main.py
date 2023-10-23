@@ -24,9 +24,9 @@ TESTING = True
 
 def generateQuestions(thing, names, descriptions):
     # st.write(thing)
-    st.write(names)
+    # st.write(names)
     # st.write(descriptions)
-    st.write(st.session_state)
+    # st.write(st.session_state)
     if TESTING:
         return ["How would you describe your physical strength and power?",
         "Do you have a natural inclination towards providing nourishment or care for others?",
@@ -46,7 +46,7 @@ def generateQuestions(thing, names, descriptions):
         chain_variables["name" + str(i)] = names[i]
         chain_variables["description" + str(i)] = descriptions[i]
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
-    st.write(template)
+    # st.write(template)
     prompt=PromptTemplate(
         template=template,
         input_variables=list(chain_variables.keys())
@@ -56,9 +56,48 @@ def generateQuestions(thing, names, descriptions):
     output = chain.run(**chain_variables)
     # output = chain.run(thing=thing, name1=df['Name'][0], description1=df['Description'][0], name2=df['Name'][1], description2=df['Description'][1], name3=df['Name'][2], description3=df['Description'][2], name4=df['Name'][3], description4=df['Description'][3])
     
-    st.write(output)
+    # st.write(output)
     output = output.splitlines()
     return output
+
+def analyzeAnswers():
+    if TESTING:
+        return "Based on your answers, it seems like you are a penguin! You enjoy being playful and silly, and you are comfortable in cold environments. Plus, your unique way of moving, like waddling, matches with a penguin's characteristics. Have fun waddling around and making others laugh!"
+    chain_variables = {"thing":thing, "human_input": ""}
+    for i in range(len(names)):
+        chain_variables["name" + str(i)] = names[i]
+        chain_variables["description" + str(i)] = descriptions[i]
+
+    template = "You are a funny and interesting chatbot which is analyzing user answers to determine to determine which {thing} they are. \
+                                These are the choices:\n{name0}: {description0}\n{name1}: {description1}\n{name2}: {description2}\n{name3}: {description3} \
+                                                    And these are the questions and answers: \n"
+    for i in range(len(questions)):
+        template += "\nQuestion " + str(i+1) + ": " + questions[i] + "\nAnswer " + str(i+1) + ": " + answers[i]
+    template += "Alright! The results are in! And the {thing} you are is..."
+
+    systemMessage = PromptTemplate.from_template(template=template)
+    # history.add_message(systemMessage.format(**chain_variables))
+    # history.add_message(AIMessage(content="Question 1: " + questions[0]))
+    # history.add_message(HumanMessage(content=answers[0]))
+    # history.add_message(AIMessage(content="Question 2: " + questions[1]))
+    # history.add_message(HumanMessage(content=answers[1]))
+    # history.add_message(AIMessage(content="Question 3: " + questions[2]))
+    # history.add_message(HumanMessage(content=answers[2]))
+    # history.add_message(AIMessage(content="Question 4: " + questions[3]))
+    # history.add_message(HumanMessage(content=answers[3]))
+    # history.add_message(AIMessage(content="Question 5: " + questions[4]))
+    # history.add_message(HumanMessage(content=answers[4]))
+    # history.add_message(AIMessage(content="Alright! The results are in! And the {thing} you are is...".format(thing=thing)))
+    # st.write(history)
+    # memory = ConversationBufferMemory(return_messages=True, input_key="human_input")
+    # memory.save_context(inputs=history)      
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+    chain = LLMChain(llm=llm, prompt=systemMessage) #, memory=memory
+    output = chain.run(**chain_variables)
+    # st.write(output)
+    st.session_state["output"] = output
+    st.session_state["step"] = 4
+    step = 4
 
 
 st.title("LLM Quiz Generator")
@@ -122,37 +161,10 @@ if step == 3:
         if submit_button2:
             # del submit_button2
 
-            chain_variables = {"thing":thing, "human_input": ""}
-            for i in range(len(names)):
-                chain_variables["name" + str(i)] = names[i]
-                chain_variables["description" + str(i)] = descriptions[i]
-            history = ChatMessageHistory()
+           analyzeAnswers()
 
-            systemMessage = PromptTemplate.from_template(template="You are a funny and interesting chatbot giving users a quiz to determine which {thing} they are. \
-                                        You are going to ask the user 5 questions to determine which {thing} they are.\
-                                        These are the choices:\n{name0}: {description0}\n{name1}: {description1}\n{name2}: {description2}\n{name3}: {description3}")
-            # history.add_message(systemMessage.format(**chain_variables))
-            history.add_message(AIMessage(content="Question 1: " + questions[0]))
-            history.add_message(HumanMessage(content=answers[0]))
-            history.add_message(AIMessage(content="Question 2: " + questions[1]))
-            history.add_message(HumanMessage(content=answers[1]))
-            history.add_message(AIMessage(content="Question 3: " + questions[2]))
-            history.add_message(HumanMessage(content=answers[2]))
-            history.add_message(AIMessage(content="Question 4: " + questions[3]))
-            history.add_message(HumanMessage(content=answers[3]))
-            history.add_message(AIMessage(content="Question 5: " + questions[4]))
-            history.add_message(HumanMessage(content=answers[4]))
-            history.add_message(AIMessage(content="Alright! The results are in! And the {thing} you are is...".format(thing=thing)))
-            st.write(history)
-            memory = ConversationBufferMemory(return_messages=True, input_key="human_input")
-            memory.save_context(inputs=history)      
-            llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
-            chain = LLMChain(llm=llm, memory=memory, prompt=systemMessage)
-            output = chain.run(**chain_variables)
-            st.write(output)
-
-
-    
+if step == 4:
+    st.write(st.session_state["output"])
 
 # thing = None
 # df = None
