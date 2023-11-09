@@ -9,12 +9,12 @@ First tell the system what this quiz is going to be about.
 
 Next, tell it what the different categories are and give a brief description of each.
 
-![Step 2](screenshots/step1.png "Step 2")
+![Step 2](screenshots/step2.png "Step 2")
 
 Then answer the questions that the LLM generated for you.
 
-![Step 3](screenshots/step1.png "Step 3")
+![Step 3](screenshots/step3.png "Step 3")
 
 And then finally get your results!
 
-![Step 4](screenshots/step1.png "Step 4")
+![Step 4](screenshots/step4.png "Step 4")
